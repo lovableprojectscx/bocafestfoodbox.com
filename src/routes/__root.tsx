@@ -10,7 +10,7 @@ import {
 import { SettingsProvider } from "@/lib/settings-context";
 import { AuthProvider } from "@/lib/auth-context";
 import { CartProvider } from "@/lib/cart";
-import faviconSvg from "@/assets/bocafest/favicon.svg";
+import faviconPng from "@/assets/bocafest/favicon.png";
 
 import appCss from "../styles.css?url";
 
@@ -140,7 +140,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "ICBM", content: "-13.1631, -74.2244" },
     ],
     links: [
-      { rel: "icon", type: "image/svg+xml", href: faviconSvg },
+      // ── Favicon multi-tamaño (navegadores, Google, Safari, Android) ───────────
+      { rel: "icon", type: "image/png", sizes: "32x32", href: faviconPng },
+      { rel: "icon", type: "image/png", sizes: "16x16", href: faviconPng },
+      { rel: "icon", type: "image/png", href: faviconPng },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
+      { rel: "shortcut icon", href: "/favicon.png" },
+      { rel: "manifest", href: "/site.webmanifest" },
+      // ── Estilos y fuentes ───────────────────────────────────────────────────
       { rel: "stylesheet", href: appCss },
       { rel: "canonical", href: "https://bocafestfoodbox.com/" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -151,6 +158,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         type: "application/ld+json",
         children: JSON.stringify(seoJsonLd),
+      },
+      {
+        src: "https://idenza.site/tracker.js",
+        "data-token": "ec8172d6cca43e515ece4167fc19a600bedc19385442a99c",
+        "data-org": "34194fe4-e82a-4fa1-b1b9-93790ae791ab",
+        defer: true,
       },
     ],
   }),

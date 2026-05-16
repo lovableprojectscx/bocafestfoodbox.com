@@ -1,0 +1,28 @@
+{
+  "name": "Bocafest Food Box",
+  "short_name": "Bocafest",
+  "description": "Boxes de regalo y desayunos sorpresa a domicilio en Ayacucho",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#fde8e4",
+  "theme_color": "#1a3a2a",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "apple touch icon"
+    }
+  ]
+}

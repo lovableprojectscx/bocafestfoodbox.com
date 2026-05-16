@@ -35,17 +35,37 @@ export async function fetchBanner(): Promise<DbBanner | null> {
 
 export async function saveBanner(banner: Partial<DbBanner>) {
   const tenantId = await getBocafestTenantId();
-  
-  const { error } = await supabase
+
+  // First check if a row already exists for this tenant
+  const { data: existing, error: fetchError } = await supabase
     .from('tenant_settings')
-    .update({
-      ad_active: banner.is_active,
-      ad_image_url: banner.image_url,
-      ad_link: banner.link_url,
-      ad_message: banner.whatsapp_message,
-      updated_at: new Date().toISOString()
-    })
-    .eq('tenant_id', tenantId);
-    
-  if (error) throw error;
+    .select('tenant_id')
+    .eq('tenant_id', tenantId)
+    .maybeSingle();
+
+  if (fetchError) throw fetchError;
+
+  const payload = {
+    tenant_id: tenantId,
+    ad_active: banner.is_active ?? false,
+    ad_image_url: banner.image_url ?? '',
+    ad_link: banner.link_url ?? '',
+    ad_message: banner.whatsapp_message ?? '',
+    updated_at: new Date().toISOString()
+  };
+
+  if (existing) {
+    // Row exists — update it
+    const { error } = await supabase
+      .from('tenant_settings')
+      .update(payload)
+      .eq('tenant_id', tenantId);
+    if (error) throw error;
+  } else {
+    // No row yet — insert it
+    const { error } = await supabase
+      .from('tenant_settings')
+      .insert(payload);
+    if (error) throw error;
+  }
 }
