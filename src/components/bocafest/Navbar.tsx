@@ -37,14 +37,14 @@ export function Navbar() {
     <>
       <header
         className={`fixed inset-x-0 top-0 z-40 transition-all duration-500 ${
-          scrolled ? "p-0 md:p-4" : "p-4 md:p-6"
+          scrolled ? "p-0 md:p-4" : "p-0 md:p-6 md:pt-6"
         }`}
       >
         <div
-          className={`mx-auto flex max-w-5xl items-center justify-between transition-all duration-500 md:px-6 px-4 ${
+          className={`mx-auto flex max-w-5xl items-center justify-between transition-all duration-500 px-4 md:px-6 ${
             scrolled
-              ? "h-14 md:h-16 bg-white/90 shadow-lg shadow-primary/5 backdrop-blur-xl md:rounded-full md:border md:border-white/40 border-b border-white/40"
-              : "h-16 md:h-20 bg-white/40 shadow-sm backdrop-blur-md rounded-full border border-white/40"
+              ? "h-14 md:h-16 bg-white/95 shadow-lg shadow-primary/5 backdrop-blur-xl md:rounded-full md:border md:border-white/40 border-b border-primary/10"
+              : "h-16 md:h-20 bg-white/95 shadow-sm backdrop-blur-md md:rounded-full md:border md:border-white/40 border-b border-primary/5"
           }`}
         >
           {/* Left Area: Menu Button (Mobile) or Links (Desktop) */}
