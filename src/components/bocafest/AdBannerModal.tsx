@@ -10,23 +10,27 @@ export function AdBannerModal() {
 
   useEffect(() => {
     fetchBanner().then((data) => {
-      if (data && data.is_active && data.image_url) {
+      if (!data || !data.is_active || !data.image_url) return;
+
+      // Precargar la imagen en memoria antes de mostrar el popup.
+      // El popup solo aparece cuando el navegador ya tiene la imagen lista,
+      // eliminando el "flash" de carga o el espacio vacío inicial.
+      const img = new Image();
+      img.onload = () => {
         setBanner(data);
-        // Pequeño delay para que no sea tan agresivo al cargar
-        setTimeout(() => setIsOpen(true), 1500);
-      }
+        setIsOpen(true);
+      };
+      img.onerror = () => {
+        // Si falla la carga de la imagen, no mostrar el popup
+        console.warn('AdBannerModal: no se pudo cargar la imagen del popup.');
+      };
+      img.src = data.image_url;
     });
   }, []);
 
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
   if (!banner || !isOpen) return null;
@@ -43,24 +47,32 @@ export function AdBannerModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" aria-modal="true" role="dialog">
-      <div 
-        className="absolute inset-0 bg-primary/60 backdrop-blur-sm transition-opacity" 
-        onClick={() => setIsOpen(false)} 
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
+      aria-modal="true"
+      role="dialog"
+    >
+      {/* Fondo oscuro */}
+      <div
+        className="absolute inset-0 bg-primary/60 backdrop-blur-sm"
+        onClick={() => setIsOpen(false)}
       />
-      
-      <div className="bf-spring relative flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-transparent shadow-2xl">
+
+      {/* Panel del popup */}
+      <div className="bf-spring relative flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-2xl shadow-2xl">
+        {/* Botón cerrar */}
         <button
           onClick={() => setIsOpen(false)}
           aria-label="Cerrar anuncio"
-          className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-background/50 text-foreground backdrop-blur hover:bg-background"
+          className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-background/60 text-foreground backdrop-blur hover:bg-background transition-colors"
         >
           <X className="h-4 w-4" />
         </button>
 
-        <img 
-          src={banner.image_url} 
-          alt="Promoción" 
+        {/* Imagen ya precargada — se muestra instantáneamente */}
+        <img
+          src={banner.image_url}
+          alt="Promoción"
           className="h-auto w-full object-contain cursor-pointer"
           onClick={handleAction}
         />
