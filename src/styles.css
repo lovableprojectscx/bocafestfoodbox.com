@@ -1,0 +1,153 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-gold: var(--gold);
+  --color-rose: var(--rose);
+  --color-kraft: var(--kraft);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-serif: "Cormorant Garamond", Georgia, serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --radius: 0.75rem;
+  /* Bocafest palette (final) — converted from supplied hex to oklch */
+  --background: oklch(0.957 0.018 80);          /* #F8F2E6 ivory */
+  --foreground: oklch(0.31 0.04 155);           /* #1B3A2F pine */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.31 0.04 155);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.31 0.04 155);
+  --primary: oklch(0.31 0.04 155);              /* pine */
+  --primary-foreground: oklch(0.98 0.012 80);
+  --secondary: oklch(0.92 0.025 75);
+  --secondary-foreground: oklch(0.31 0.04 155);
+  --muted: oklch(0.93 0.018 75);
+  --muted-foreground: oklch(0.5 0.022 55);      /* #6B5B4E */
+  --accent: oklch(0.42 0.13 13);                /* #8C1A34 burdeos */
+  --accent-foreground: oklch(0.98 0.012 80);
+  --gold: oklch(0.78 0.16 75);                  /* #F5A800 */
+  --rose: oklch(0.86 0.06 5);                   /* #F2C4CE */
+  --kraft: oklch(0.74 0.05 75);                 /* #C4A882 */
+  --destructive: oklch(0.55 0.22 27);
+  --destructive-foreground: oklch(0.98 0.012 80);
+  --border: oklch(0.88 0.02 75);
+  --input: oklch(0.88 0.02 75);
+  --ring: oklch(0.42 0.13 13);
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  html { scroll-behavior: smooth; }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 { font-family: var(--font-display); }
+}
+
+/* ===== SEO: screen-reader-only utility (invisible to users, visible to search engines) ===== */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ===== Bocafest custom animations ===== */
+@keyframes bf-fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes bf-fade-in {
+  from { opacity: 0; } to { opacity: 1; }
+}
+@keyframes bf-bounce-arrow {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(6px); }
+}
+@keyframes bf-pop-in {
+  0%   { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes bf-spring {
+  0%   { opacity: 0; transform: scale(0.98); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes bf-progress {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+.bf-reveal { opacity: 0; transform: translateY(16px); transition: opacity .6s ease, transform .6s cubic-bezier(.2,.7,.2,1); }
+.bf-reveal.is-visible { opacity: 1; transform: translateY(0); }
+
+.bf-ken-burns { /* disabled — caused jarring zoom */ }
+.bf-bounce { animation: bf-bounce-arrow 2s ease-in-out infinite; }
+.bf-pop { animation: bf-pop-in .5s ease-out both; }
+.bf-spring { animation: bf-spring .3s ease-out both; }
+
+.bf-card-hover { transition: transform .3s ease, box-shadow .3s ease; }
+.bf-card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -20px oklch(0.31 0.04 155 / .25); }
+.bf-img-zoom { transition: transform .6s ease; }
+.group:hover .bf-img-zoom, .bf-zoom-parent:hover .bf-img-zoom { transform: scale(1.04); }
+
+.bf-heart {
+  -webkit-clip-path: path('M50,88 C50,88 8,60 8,32 C8,16 22,8 32,8 C42,8 48,16 50,22 C52,16 58,8 68,8 C78,8 92,16 92,32 C92,60 50,88 50,88 Z');
+  clip-path: path('M50,88 C50,88 8,60 8,32 C8,16 22,8 32,8 C42,8 48,16 50,22 C52,16 58,8 68,8 C78,8 92,16 92,32 C92,60 50,88 50,88 Z');
+}
+
+.bf-cursor-dot {
+  position: fixed; top: 0; left: 0; width: 14px; height: 14px;
+  border-radius: 9999px; background: oklch(0.31 0.04 155);
+  pointer-events: none; z-index: 9999; mix-blend-mode: multiply;
+  transform: translate(-50%, -50%); transition: transform .12s ease, opacity .2s ease;
+  opacity: 0;
+}
+@media (hover: hover) and (pointer: fine) {
+  .bf-cursor-dot.is-active { opacity: .85; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+  .bf-reveal { opacity: 1 !important; transform: none !important; }
+}
