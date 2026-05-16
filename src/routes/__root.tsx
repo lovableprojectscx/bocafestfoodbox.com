@@ -10,7 +10,7 @@ import {
 import { SettingsProvider } from "@/lib/settings-context";
 import { AuthProvider } from "@/lib/auth-context";
 import { CartProvider } from "@/lib/cart";
-import faviconPng from "@/assets/bocafest/favicon.png";
+import faviconWebp from "@/assets/bocafest/favicon.webp";
 
 import appCss from "../styles.css?url";
 
@@ -140,12 +140,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "ICBM", content: "-13.1631, -74.2244" },
     ],
     links: [
-      // ── Favicon multi-tamaño (navegadores, Google, Safari, Android) ───────────
-      { rel: "icon", type: "image/png", sizes: "32x32", href: faviconPng },
-      { rel: "icon", type: "image/png", sizes: "16x16", href: faviconPng },
-      { rel: "icon", type: "image/png", href: faviconPng },
-      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
-      { rel: "shortcut icon", href: "/favicon.png" },
+      // ── Favicon oficial (Versión Círculo Rosa) ───────────────────────────────
+      { rel: "icon", type: "image/webp", href: faviconWebp },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      { rel: "shortcut icon", href: "/favicon.webp" },
       { rel: "manifest", href: "/site.webmanifest" },
       // ── Estilos y fuentes ───────────────────────────────────────────────────
       { rel: "stylesheet", href: appCss },
