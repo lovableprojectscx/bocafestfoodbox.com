@@ -1,0 +1,9 @@
+# https://bocafestfoodbox.com
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /login
+Disallow: /api/
+
+Sitemap: https://bocafestfoodbox.com/sitemap.xml
