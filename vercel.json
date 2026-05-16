@@ -3,8 +3,13 @@
   "outputDirectory": "dist/client",
   "rewrites": [
     { "source": "/fonts/(.*)", "destination": "/fonts/$1" },
-    { "source": "/logo.webp", "destination": "/logo.webp" },
+    { "source": "/og-image.jpg", "destination": "/og-image.jpg" },
     { "source": "/og-image.png", "destination": "/og-image.png" },
+    { "source": "/favicon.webp", "destination": "/favicon.webp" },
+    { "source": "/favicon.png", "destination": "/favicon.png" },
+    { "source": "/favicon.ico", "destination": "/favicon.ico" },
+    { "source": "/apple-touch-icon.png", "destination": "/apple-touch-icon.png" },
+    { "source": "/site.webmanifest", "destination": "/site.webmanifest" },
     { "source": "/robots.txt", "destination": "/robots.txt" },
     { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
     { "source": "/(.*)", "destination": "/api/server" }
