@@ -11,6 +11,8 @@ import { CartFab } from "@/components/bocafest/CartFab";
 import { CursorDot } from "@/components/bocafest/CursorDot";
 import { WhatsAppFab } from "@/components/bocafest/WhatsAppFab";
 
+import { AdBannerModal } from "@/components/bocafest/AdBannerModal";
+
 export const Route = createFileRoute("/")({
   component: Index,
 });
@@ -31,6 +33,7 @@ function Index() {
       <CartSheet />
       <CartFab />
       <WhatsAppFab />
+      <AdBannerModal />
     </>
   );
 }

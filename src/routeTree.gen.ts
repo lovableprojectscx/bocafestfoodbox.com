@@ -15,6 +15,7 @@ import { Route as CatalogoRouteImport } from './routes/catalogo'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminPopupRouteImport } from './routes/admin/popup'
 import { Route as AdminPedidosRouteImport } from './routes/admin/pedidos'
 import { Route as AdminCategoriasRouteImport } from './routes/admin/categorias'
 import { Route as AdminCatalogoRouteImport } from './routes/admin/catalogo'
@@ -50,6 +51,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPopupRoute = AdminPopupRouteImport.update({
+  id: '/popup',
+  path: '/popup',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPedidosRoute = AdminPedidosRouteImport.update({
   id: '/pedidos',
   path: '/pedidos',
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/admin/catalogo': typeof AdminCatalogoRoute
   '/admin/categorias': typeof AdminCategoriasRoute
   '/admin/pedidos': typeof AdminPedidosRoute
+  '/admin/popup': typeof AdminPopupRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/admin/catalogo': typeof AdminCatalogoRoute
   '/admin/categorias': typeof AdminCategoriasRoute
   '/admin/pedidos': typeof AdminPedidosRoute
+  '/admin/popup': typeof AdminPopupRoute
   '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
@@ -105,6 +113,7 @@ export interface FileRoutesById {
   '/admin/catalogo': typeof AdminCatalogoRoute
   '/admin/categorias': typeof AdminCategoriasRoute
   '/admin/pedidos': typeof AdminPedidosRoute
+  '/admin/popup': typeof AdminPopupRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -119,6 +128,7 @@ export interface FileRouteTypes {
     | '/admin/catalogo'
     | '/admin/categorias'
     | '/admin/pedidos'
+    | '/admin/popup'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
     | '/admin/catalogo'
     | '/admin/categorias'
     | '/admin/pedidos'
+    | '/admin/popup'
     | '/admin'
   id:
     | '__root__'
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
     | '/admin/catalogo'
     | '/admin/categorias'
     | '/admin/pedidos'
+    | '/admin/popup'
     | '/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -197,6 +209,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/popup': {
+      id: '/admin/popup'
+      path: '/popup'
+      fullPath: '/admin/popup'
+      preLoaderRoute: typeof AdminPopupRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/pedidos': {
       id: '/admin/pedidos'
       path: '/pedidos'
@@ -233,6 +252,7 @@ interface AdminRouteChildren {
   AdminCatalogoRoute: typeof AdminCatalogoRoute
   AdminCategoriasRoute: typeof AdminCategoriasRoute
   AdminPedidosRoute: typeof AdminPedidosRoute
+  AdminPopupRoute: typeof AdminPopupRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -241,6 +261,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCatalogoRoute: AdminCatalogoRoute,
   AdminCategoriasRoute: AdminCategoriasRoute,
   AdminPedidosRoute: AdminPedidosRoute,
+  AdminPopupRoute: AdminPopupRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 

@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, Link, useLocation, useNavigate } from '@tanstack/react-router';
-import { LayoutDashboard, ShoppingBag, PackageSearch, Settings, LogOut, Menu, X, Tags, Loader2 } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, PackageSearch, Settings, LogOut, Menu, X, Tags, Loader2, Megaphone } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import logo from '@/assets/bocafest/logo.png';
@@ -36,6 +36,7 @@ function AdminLayout() {
     { name: 'Pedidos', href: '/admin/pedidos', icon: ShoppingBag },
     { name: 'Catálogo', href: '/admin/catalogo', icon: PackageSearch },
     { name: 'Categorías', href: '/admin/categorias', icon: Tags },
+    { name: 'Pop Up', href: '/admin/popup', icon: Megaphone },
     { name: 'Ajustes', href: '/admin/ajustes', icon: Settings },
   ];
 
