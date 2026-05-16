@@ -50,7 +50,7 @@ export function HeroCarousel() {
       id="top"
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
-      className="relative w-full overflow-hidden bg-[oklch(0.957_0.018_80)] mt-24 md:mt-[112px] aspect-[4/5] md:h-[60vh] md:aspect-auto touch-pan-y select-none"
+      className="relative w-full overflow-hidden bg-[oklch(0.957_0.018_80)] aspect-[4/5] md:h-[100vh] md:aspect-auto touch-pan-y select-none"
     >
       {/* SEO: invisible h1 — visible only to search engines */}
       <h1 className="sr-only">Bocafest Food Box — Regalos Sorpresa y Desayunos a Domicilio en Ayacucho</h1>
@@ -75,15 +75,7 @@ export function HeroCarousel() {
         </div>
       ))}
 
-      {/* White logo overlay — desktop only */}
-      <div className="pointer-events-none absolute inset-x-0 top-6 z-10 hidden justify-center md:flex">
-        <img
-          src={logo}
-          alt="Bocafest"
-          className="h-14 w-auto"
-          style={{ filter: "brightness(0) invert(1)" }}
-        />
-      </div>
+
 
       {/* Dots */}
       <div className="absolute bottom-10 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2">
