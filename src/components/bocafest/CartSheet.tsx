@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Minus, Plus, X, Trash2 } from "lucide-react";
 import { useCart, formatPEN } from "@/lib/cart";
 import { CheckoutModal } from "./CheckoutModal";
@@ -6,6 +6,13 @@ import { CheckoutModal } from "./CheckoutModal";
 export function CartSheet() {
   const { isOpen, close, items, inc, dec, remove, total, count } = useCart();
   const [checkout, setCheckout] = useState(false);
+
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   return (
     <>
@@ -21,7 +28,7 @@ export function CartSheet() {
       <aside
         role="dialog"
         aria-label="Carrito"
-        className={`fixed right-0 top-0 z-50 flex h-[100svh] w-full max-w-md flex-col bg-background shadow-2xl transition-transform duration-500 ease-[cubic-bezier(.2,.7,.2,1)] ${
+        className={`fixed right-0 top-0 bottom-0 z-50 flex w-full max-w-md flex-col bg-background shadow-2xl transition-transform duration-500 ease-[cubic-bezier(.2,.7,.2,1)] ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
