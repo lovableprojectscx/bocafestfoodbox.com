@@ -1,7 +1,7 @@
 import { supabase, getBocafestTenantId } from '../supabase';
 
 export type DbBanner = {
-  id: string;
+  id?: string;
   tenant_id: string;
   image_url: string;
   link_url: string;
@@ -12,53 +12,40 @@ export type DbBanner = {
 export async function fetchBanner(): Promise<DbBanner | null> {
   const tenantId = await getBocafestTenantId();
   const { data, error } = await supabase
-    .from('ad_banners')
-    .select('*')
+    .from('tenant_settings')
+    .select('ad_active, ad_image_url, ad_link, ad_message')
     .eq('tenant_id', tenantId)
     .single();
-  if (error && error.code !== 'PGRST116') {
+    
+  if (error) {
     console.error('Error fetching banner:', error);
     return null;
   }
-  return data as DbBanner | null;
+  
+  if (!data) return null;
+  
+  return {
+    tenant_id: tenantId,
+    is_active: data.ad_active || false,
+    image_url: data.ad_image_url || '',
+    link_url: data.ad_link || '',
+    whatsapp_message: data.ad_message || ''
+  };
 }
 
 export async function saveBanner(banner: Partial<DbBanner>) {
   const tenantId = await getBocafestTenantId();
   
-  // Ver si existe
-  const { data: existing } = await supabase
-    .from('ad_banners')
-    .select('id')
-    .eq('tenant_id', tenantId)
-    .single();
-
-  if (existing) {
-    const { error } = await supabase
-      .from('ad_banners')
-      .update(banner)
-      .eq('id', existing.id);
-    if (error) throw error;
-  } else {
-    const { error } = await supabase
-      .from('ad_banners')
-      .insert({ ...banner, tenant_id: tenantId });
-    if (error) throw error;
-  }
-}
-
-export async function uploadBannerImage(file: File): Promise<string> {
-  const tenantId = await getBocafestTenantId();
-  const fileExt = file.name.split('.').pop();
-  const fileName = `banner-${Date.now()}.${fileExt}`;
-  const filePath = `${tenantId}/${fileName}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from('images')
-    .upload(filePath, file);
-
-  if (uploadError) throw uploadError;
-
-  const { data } = supabase.storage.from('images').getPublicUrl(filePath);
-  return data.publicUrl;
+  const { error } = await supabase
+    .from('tenant_settings')
+    .update({
+      ad_active: banner.is_active,
+      ad_image_url: banner.image_url,
+      ad_link: banner.link_url,
+      ad_message: banner.whatsapp_message,
+      updated_at: new Date().toISOString()
+    })
+    .eq('tenant_id', tenantId);
+    
+  if (error) throw error;
 }

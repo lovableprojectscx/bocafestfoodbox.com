@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useState, useEffect, useRef } from 'react';
-import { Save, Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
-import { fetchBanner, saveBanner, uploadBannerImage, type DbBanner } from '@/lib/api/banners';
+import { useState, useEffect } from 'react';
+import { Save, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { fetchBanner, saveBanner, type DbBanner } from '@/lib/api/banners';
 
 export const Route = createFileRoute('/admin/popup')({
   component: AdminPopupPage,
@@ -10,8 +10,6 @@ export const Route = createFileRoute('/admin/popup')({
 function AdminPopupPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<Partial<DbBanner>>({
     image_url: '',
@@ -37,27 +35,10 @@ function AdminPopupPage() {
     }));
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    try {
-      const url = await uploadBannerImage(file);
-      setFormData(prev => ({ ...prev, image_url: url }));
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      alert('Error al subir la imagen.');
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.image_url) {
-      alert('Debes subir una imagen para el Pop Up.');
+      alert('Debes ingresar la URL de una imagen para el Pop Up.');
       return;
     }
     
@@ -117,31 +98,18 @@ function AdminPopupPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">
-              Imagen del Anuncio
+            <label htmlFor="image_url" className="text-sm font-medium text-foreground">
+              Imagen del Anuncio (URL)
             </label>
-            <div className="flex items-center gap-4">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="flex items-center gap-2 rounded-md bg-secondary px-4 py-2.5 text-sm font-medium text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50"
-              >
-                {uploading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Upload className="h-4 w-4" />
-                )}
-                Subir Imagen
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-            </div>
+            <input
+              type="text"
+              id="image_url"
+              name="image_url"
+              value={formData.image_url || ''}
+              onChange={handleChange}
+              placeholder="https://..."
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+            />
             <p className="text-xs text-muted-foreground">Formato recomendado: Vertical (9:16) o Cuadrado.</p>
           </div>
 
@@ -184,7 +152,7 @@ function AdminPopupPage() {
             ) : (
               <div className="flex flex-col items-center text-muted-foreground">
                 <ImageIcon className="h-12 w-12 opacity-50 mb-2" />
-                <p className="text-sm">Sin imagen subida</p>
+                <p className="text-sm">Sin imagen</p>
               </div>
             )}
           </div>
