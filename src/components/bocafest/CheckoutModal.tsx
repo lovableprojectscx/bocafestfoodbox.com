@@ -33,7 +33,7 @@ export function CheckoutModal({ onClose }: { onClose: () => void }) {
 
   const sendWhatsAppDirect = () => {
     // Si elige directo por WhatsApp, armamos el mensaje solo con los productos
-    window.open(buildWhatsAppOrderUrl(items, total, "WhatsApp", undefined, whatsapp), "_blank", "noopener");
+    window.open(buildWhatsAppOrderUrl(items, total, whatsapp), "_blank", "noopener");
     onClose();
   };
 

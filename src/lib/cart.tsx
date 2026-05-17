@@ -101,46 +101,19 @@ export function formatPEN(n: number) {
   return new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(n);
 }
 
-export type DeliveryData = {
-  name: string;
-  address: string;
-  hour: string;
-  minute: string;
-  ampm: string;
-  message: string;
-};
-
 export function buildWhatsAppOrderUrl(
   items: CartItem[], 
   total: number, 
-  method: "WhatsApp" | "Yape" | "Plin" = "WhatsApp",
-  delivery?: DeliveryData,
   phoneNumber?: string
 ) {
   const phone = phoneNumber || WHATSAPP_NUMBER;
   const lines = items.map((i) => `• ${i.qty} × ${i.name} — ${formatPEN(i.price * i.qty)}`).join("\n");
   
-  let deliveryText = "";
-  if (delivery) {
-    deliveryText = `*Datos de Entrega:*\n` +
-      `Nombre: ${delivery.name}\n` +
-      `Dirección: ${delivery.address}\n` +
-      `Hora preferida: ${delivery.hour}:${delivery.minute} ${delivery.ampm}\n`;
-    if (delivery.message) {
-      deliveryText += `Mensaje adicional: ${delivery.message}\n`;
-    }
-    deliveryText += `\n`;
-  }
-
   const msg =
     `*Nuevo pedido Bocafest*\n\n` +
     `${lines}\n\n` +
-    `*Total:* ${formatPEN(total)}\n` +
-    `*Método de pago:* ${method}\n\n` +
-    deliveryText +
-    (method === "WhatsApp"
-      ? `Hola, me gustaría coordinar los detalles de mi pedido y realizar el pago por aquí. ¡Gracias!`
-      : `Hola, adjunto mi captura/comprobante de pago para confirmar este pedido. ¡Gracias!`);
+    `*Total:* ${formatPEN(total)}\n\n` +
+    `Hola, me gustaría coordinar los detalles de mi pedido y realizar el pago por aquí. ¡Gracias!`;
     
   return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
 }
