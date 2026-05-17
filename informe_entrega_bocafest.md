@@ -18,6 +18,7 @@ El proyecto ha sido desarrollado cumpliendo con altos estándares de calidad, as
 - Catálogo de productos dinámico y 100% editable.
 - Panel de administración seguro para la autogestión del negocio.
 - Sistema de pedidos automatizado dirigido a WhatsApp.
+- **Notificaciones automáticas por correo (FormSubmit):** Alertas en tiempo real enviadas a `betsymp0694@gmail.com` cada vez que se registra un pedido a través del formulario, incluyendo detalles completos de la entrega y un enlace de contacto directo.
 - SEO local optimizado específicamente para el mercado de Ayacucho.
 - Dominio propio incluido (cobertura durante el primer año).
 - Diseño responsivo, adaptado perfectamente a dispositivos móviles, tablets y computadoras de escritorio.
@@ -53,6 +54,26 @@ El panel de administración está diseñado para ser intuitivo y ágil:
 - **Cómo editar categorías:** Diríjase a la sección "Categorías" para crear, modificar o eliminar las categorías que estructuran su catálogo.
 - **Cómo actualizar datos del negocio:** En "Configuración", podrá modificar sus números de WhatsApp, enlaces a redes sociales y textos informativos.
 - **Cómo cambiar imágenes del slider:** En la sección "Banners" o "Slider", suba sus nuevas imágenes manteniendo las proporciones recomendadas para no afectar el diseño.
+
+### 6.1. Sistema de Notificaciones de Pedidos por Correo
+Cuando un cliente completa el formulario de pedido en la web, la plataforma realiza dos acciones en paralelo:
+1. **Guarda el pedido** en la base de datos para que lo visualice y administre desde su Panel de Administración.
+2. **Envía una alerta inmediata al correo** `betsymp0694@gmail.com` usando la tecnología de *FormSubmit*.
+
+> [!IMPORTANT]
+> **Paso obligatorio de activación (Solo se realiza la primera vez):**
+> Al recibir el primer pedido de prueba en la web, llegará un correo de **FormSubmit** a su bandeja pidiendo confirmar la cuenta.
+> 1. Ingrese a su bandeja de correo (revise la bandeja principal y también la carpeta de *Spam* o *Correo no deseado*).
+> 2. Abra el correo enviado por `FormSubmit.co`.
+> 3. Haga clic en el botón de **"Active Form"** o **"Confirmar Email"**.
+> *¡Listo! A partir de ese momento, todas las alertas de nuevos pedidos llegarán directamente y en tiempo real a su bandeja.*
+
+**¿Cómo funciona la respuesta rápida por WhatsApp en el correo?**
+Dentro de cada correo de notificación de pedido, verá un enlace directo etiquetado como **"Chatear con el Cliente (WhatsApp)"**. Al hacer clic sobre este enlace:
+- Se abrirá automáticamente un chat de WhatsApp con el número del cliente.
+- Se cargará de forma automática un mensaje pre-configurado listo para enviar, que dice:
+  > *"Hola [Nombre Cliente], te saludamos de Bocafest. Hemos recibido tu pedido con el código [Código]. A continuación coordinamos la entrega de tu Box para el día [Fecha] en el rango de [Hora]."*
+- Esto le permite cerrar la venta, confirmar el cobro del delivery y enviar los métodos de pago (Yape/Plin/BCP) con un solo clic, ahorrándole el tiempo de copiar los datos o guardar el contacto.
 
 ## 7. MANTENIMIENTO ANUAL Y SERVICIOS
 Para mantener la plataforma en línea, operativa y segura, aplican las siguientes tarifas de renovación y mantenimiento:

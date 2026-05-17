@@ -117,6 +117,46 @@ export function CheckoutModal({ onClose }: { onClose: () => void }) {
         tracking_code: code,
       });
 
+      // Enviar correo de notificación de pedido usando FormSubmit (silencioso, no interrumpe el flujo si falla)
+      try {
+        const cleanPhone = formData.phone.trim();
+        const customerWhatsAppPhone = cleanPhone.startsWith('51') ? cleanPhone : `51${cleanPhone}`;
+        const orderDetailsLines = items.map((i) => `• ${i.qty} x ${i.name} (${formatPEN(i.price * i.qty)})`).join('\n');
+        
+        // Generar el mensaje pre-llenado de WhatsApp para coordinar rápido
+        const ownerWhatsAppMsg = `Hola ${formData.name.trim()}, te saludamos de Bocafest. Hemos recibido tu pedido con el código *${code}*. A continuación coordinamos la entrega de tu Box para el día ${formData.delivery_date} en el rango de ${computedTimeSlot}.`;
+        const ownerWhatsAppUrl = `https://wa.me/${customerWhatsAppPhone}?text=${encodeURIComponent(ownerWhatsAppMsg)}`;
+
+        await fetch("https://formsubmit.co/ajax/betsymp0694@gmail.com", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({
+            _subject: `🎁 Nuevo Pedido en Bocafest - ${code} (${formData.name.trim()})`,
+            _captcha: "false",
+            "Código de Pedido": code,
+            "Nombre Cliente": formData.name.trim(),
+            "Celular Cliente": formData.phone.trim(),
+            "Distrito de Entrega": formData.district.trim(),
+            "Dirección de Entrega": formData.address.trim(),
+            "Referencia": formData.reference.trim() || "Ninguna",
+            "Fecha de Entrega": formData.delivery_date,
+            "Rango de Hora": computedTimeSlot,
+            "Para (Destinatario)": formData.for_name.trim(),
+            "De (Remitente)": formData.from_name.trim(),
+            "Celular Destinatario": formData.receiver_phone.trim(),
+            "Dedicatoria": formData.dedication.trim(),
+            "Detalle de Productos": orderDetailsLines,
+            "Total a Pagar": formatPEN(total),
+            "👉 Chatear con el Cliente (WhatsApp)": ownerWhatsAppUrl
+          })
+        });
+      } catch (err) {
+        console.error('Error al enviar la notificación de correo por FormSubmit:', err);
+      }
+
       setTrackingCode(code);
       setStep(3); // Pantalla de éxito
       clear();
