@@ -117,7 +117,7 @@ export function CheckoutModal({ onClose }: { onClose: () => void }) {
         tracking_code: code,
       });
 
-        // Enviar correo de notificación de pedido usando Web3Forms (silencioso, en segundo plano)
+        // Enviar correo de notificación de pedido usando Formspree (silencioso, en segundo plano)
         try {
           const cleanPhone = formData.phone.trim();
           const customerWhatsAppPhone = cleanPhone.startsWith('51') ? cleanPhone : `51${cleanPhone}`;
