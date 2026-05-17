@@ -138,7 +138,9 @@ export function buildWhatsAppOrderUrl(
     `*Total:* ${formatPEN(total)}\n` +
     `*Método de pago:* ${method}\n\n` +
     deliveryText +
-    `Hola, adjunto mi captura/comprobante de pago para confirmar este pedido. ¡Gracias!`;
+    (method === "WhatsApp"
+      ? `Hola, me gustaría coordinar los detalles de mi pedido y realizar el pago por aquí. ¡Gracias!`
+      : `Hola, adjunto mi captura/comprobante de pago para confirmar este pedido. ¡Gracias!`);
     
   return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
 }
