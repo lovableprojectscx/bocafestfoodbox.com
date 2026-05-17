@@ -126,16 +126,14 @@ export function CheckoutModal({ onClose }: { onClose: () => void }) {
           const ownerWhatsAppMsg = `Hola ${formData.name.trim()}, te saludamos de Bocafest. Hemos recibido tu pedido con el código *${code}*. A continuación coordinamos la entrega de tu Box para el día ${formData.delivery_date} en el rango de ${computedTimeSlot}.`;
           const ownerWhatsAppUrl = `https://wa.me/${customerWhatsAppPhone}?text=${encodeURIComponent(ownerWhatsAppMsg)}`;
 
-          fetch("https://api.web3forms.com/submit", {
+          fetch("https://formspree.io/f/meedqaoy", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               "Accept": "application/json"
             },
             body: JSON.stringify({
-              access_key: "2b036f29-4dbe-44e5-9051-3650b301d224",
               subject: `🎁 Nuevo Pedido en Bocafest - ${code} (${formData.name.trim()})`,
-              from_name: "Bocafest Sistema de Pedidos",
               "Código de Pedido": code,
               "Nombre Cliente": formData.name.trim(),
               "Celular Cliente": formData.phone.trim(),
@@ -153,7 +151,7 @@ export function CheckoutModal({ onClose }: { onClose: () => void }) {
               "👉 Chatear con el Cliente (WhatsApp)": ownerWhatsAppUrl
             })
           }).then(res => res.json())
-            .then(data => console.log("Correo notificado vía Web3Forms:", data))
+            .then(data => console.log("Correo notificado vía Formspree:", data))
             .catch(err => console.error("Error al enviar correo en segundo plano:", err));
         } catch (err) {
           console.error('Error preparando envío de correo:', err);
