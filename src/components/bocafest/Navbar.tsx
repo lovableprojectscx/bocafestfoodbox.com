@@ -85,6 +85,9 @@ export function Navbar() {
             <img
               src={logo}
               alt="Bocafest Food Box"
+              width={444}
+              height={122}
+              decoding="async"
               className={`w-auto transition-all duration-500 ${
                 scrolled ? "h-8 md:h-10" : "h-10 md:h-12"
               }`}
@@ -135,7 +138,7 @@ export function Navbar() {
           }`}
         >
           <div className="flex shrink-0 items-center justify-between border-b border-primary/10 px-6 py-5">
-            <img src={logo} alt="Bocafest" className="h-8 w-auto" />
+            <img src={logo} alt="Bocafest" width={444} height={122} decoding="async" className="h-8 w-auto" />
             <button
               onClick={() => setMenuOpen(false)}
               aria-label="Cerrar menú"

@@ -111,21 +111,21 @@
   100% { opacity: 1; transform: scale(1); }
 }
 @keyframes bf-progress {
-  from { width: 0%; }
-  to   { width: 100%; }
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
 }
 
 .bf-reveal { opacity: 0; transform: translateY(16px); transition: opacity .6s ease, transform .6s cubic-bezier(.2,.7,.2,1); }
 .bf-reveal.is-visible { opacity: 1; transform: translateY(0); }
 
 .bf-ken-burns { /* disabled — caused jarring zoom */ }
-.bf-bounce { animation: bf-bounce-arrow 2s ease-in-out infinite; }
+.bf-bounce { animation: bf-bounce-arrow 2s ease-in-out infinite; will-change: transform; }
 .bf-pop { animation: bf-pop-in .5s ease-out both; }
 .bf-spring { animation: bf-spring .3s ease-out both; }
 
-.bf-card-hover { transition: transform .3s ease, box-shadow .3s ease; }
+.bf-card-hover { transition: transform .3s ease, box-shadow .3s ease; will-change: transform; }
 .bf-card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -20px oklch(0.31 0.04 155 / .25); }
-.bf-img-zoom { transition: transform .6s ease; }
+.bf-img-zoom { transition: transform .6s ease; will-change: transform; }
 .group:hover .bf-img-zoom, .bf-zoom-parent:hover .bf-img-zoom { transform: scale(1.04); }
 
 .bf-heart {

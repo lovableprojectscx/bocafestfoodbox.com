@@ -12,7 +12,7 @@ export function Footer() {
     <footer className="bg-primary px-5 py-16 text-primary-foreground md:px-10">
       <div className="mx-auto grid max-w-7xl gap-10 md:grid-cols-3 md:items-center">
         <div>
-          <img src={logoFooter} alt="Bocafest Food Box" className="h-12 w-auto" style={{ filter: "brightness(0) invert(1)" }} />
+          <img src={logoFooter} alt="Bocafest Food Box" width={444} height={122} decoding="async" className="h-12 w-auto" style={{ filter: "brightness(0) invert(1)" }} />
           <p className="mt-2 max-w-xs font-serif text-base text-primary-foreground/80">Desayunos equilibrados que marcan la diferencia.</p>
         </div>
         <div className="flex md:justify-center">
@@ -20,7 +20,7 @@ export function Footer() {
             href={waUrl()}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-5 py-3 text-sm font-medium text-white transition-transform hover:scale-105"
+            className="inline-flex items-center gap-2 rounded-full bg-[#1db954] px-5 py-3 text-sm font-medium text-[#064e20] transition-transform hover:scale-105"
           >
             <MessageCircle className="h-4 w-4" /> {displayNumber}
           </a>

@@ -101,6 +101,8 @@ export function Occasions() {
                 src={o.mobile}
                 alt={o.title}
                 loading="lazy"
+                width={651}
+                height={872}
                 className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
                   i === active ? "opacity-100" : "opacity-0"
                 }`}
@@ -120,6 +122,7 @@ export function Occasions() {
               className="h-full bg-accent"
               style={{
                 animation: "bf-progress 4s linear forwards",
+                transformOrigin: "left center",
               }}
             />
           </div>

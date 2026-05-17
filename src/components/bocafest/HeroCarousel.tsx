@@ -70,6 +70,9 @@ export function HeroCarousel() {
               className="h-full w-full object-cover object-center"
               loading={i === 0 ? "eager" : "lazy"}
               fetchPriority={i === 0 ? "high" : "auto"}
+              width={721}
+              height={966}
+              decoding={i === 0 ? "sync" : "async"}
             />
           </picture>
         </div>

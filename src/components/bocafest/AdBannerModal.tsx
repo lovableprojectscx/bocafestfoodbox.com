@@ -51,6 +51,7 @@ export function AdBannerModal() {
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
       aria-modal="true"
       role="dialog"
+      aria-labelledby="ad-banner-title"
     >
       {/* Fondo oscuro */}
       <div
@@ -60,6 +61,8 @@ export function AdBannerModal() {
 
       {/* Panel del popup */}
       <div className="bf-spring relative flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-2xl shadow-2xl">
+        {/* Título accesible oculto visualmente — requerido por ARIA para role=dialog */}
+        <h2 id="ad-banner-title" className="sr-only">Promoción especial Bocafest</h2>
         {/* Botón cerrar */}
         <button
           onClick={() => setIsOpen(false)}
@@ -72,7 +75,9 @@ export function AdBannerModal() {
         {/* Imagen ya precargada — se muestra instantáneamente */}
         <img
           src={banner.image_url}
-          alt="Promoción"
+          alt={banner.title ?? "Promoción especial Bocafest"}
+          width={665}
+          height={371}
           className="h-auto w-full object-contain cursor-pointer"
           onClick={handleAction}
         />

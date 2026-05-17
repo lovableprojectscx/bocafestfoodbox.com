@@ -11,6 +11,7 @@ import { SettingsProvider } from "@/lib/settings-context";
 import { AuthProvider } from "@/lib/auth-context";
 import { CartProvider } from "@/lib/cart";
 import faviconWebp from "@/assets/bocafest/favicon.webp";
+import hero1Mobile from "@/assets/bocafest/hero-1-mobile.webp";
 
 import appCss from "../styles.css?url";
 
@@ -145,6 +146,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "shortcut icon", href: "/favicon.webp" },
       { rel: "manifest", href: "/site.webmanifest" },
+      // ── Preload LCP — descarga hero antes que React monte el árbol ───────────
+      { rel: "preload", href: hero1Mobile, as: "image", type: "image/webp", fetchPriority: "high" },
+      // ── Preconnect a Supabase para acelerar carga de banner/productos ─────────
+      { rel: "preconnect", href: "https://llasbukvdjlvwlgofgke.supabase.co", crossOrigin: "anonymous" },
       // ── Estilos y fuentes ───────────────────────────────────────────────────
       { rel: "stylesheet", href: appCss },
       { rel: "canonical", href: "https://bocafestfoodbox.com/" },
@@ -158,10 +163,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         children: JSON.stringify(seoJsonLd),
       },
       {
+        // Tracker de Idenza — cargado con defer para no bloquear el render
+        // El onerror evita que un fallo de red genere un error visible en consola
         src: "https://idenza.site/tracker.js",
         "data-token": "ec8172d6cca43e515ece4167fc19a600bedc19385442a99c",
         "data-org": "34194fe4-e82a-4fa1-b1b9-93790ae791ab",
         defer: true,
+        onerror: "void 0",
       },
     ],
   }),
