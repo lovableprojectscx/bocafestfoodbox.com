@@ -1,12 +1,33 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Plus, Search, Edit2, Trash2, X, CloudUpload } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { fetchProducts, createProduct, updateProduct, deleteProduct } from '@/lib/api/products';
 import { fetchCategories } from '@/lib/api/categories';
 
 export const Route = createFileRoute('/admin/catalogo')({
   component: AdminCatalogoPage,
 });
+
+/** Convierte cualquier imagen (File) a WebP usando Canvas API en el navegador. */
+async function toWebP(file: File, quality = 0.85): Promise<{ dataUrl: string }> {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { URL.revokeObjectURL(objectUrl); reject(new Error('No canvas context')); return; }
+      ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(objectUrl);
+      const dataUrl = canvas.toDataURL('image/webp', quality);
+      resolve({ dataUrl });
+    };
+    img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error('No se pudo cargar la imagen.')); };
+    img.src = objectUrl;
+  });
+}
 
 function AdminCatalogoPage() {
   const [search, setSearch] = useState('');
@@ -17,10 +38,34 @@ function AdminCatalogoPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [saving, setSaving] = useState(false);
+  const [convertingImage, setConvertingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     name: '', category: '', price: '', description: '', image: '',
   });
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert('La imagen es demasiado grande (máx. 10 MB).');
+      return;
+    }
+
+    setConvertingImage(true);
+    try {
+      const { dataUrl } = await toWebP(file, 0.85);
+      setFormData(prev => ({ ...prev, image: dataUrl }));
+    } catch (err) {
+      console.error(err);
+      alert('Error al procesar la imagen.');
+    } finally {
+      setConvertingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   useEffect(() => {
     Promise.all([fetchProducts(), fetchCategories()]).then(([prods, cats]) => {
@@ -182,14 +227,38 @@ function AdminCatalogoPage() {
                     className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
                 </div>
                 <div className="grid gap-2">
-                  <label className="text-sm font-medium">Imagen (URL)</label>
+                  <label className="text-sm font-medium">Imagen del Producto</label>
                   <div className="flex items-center gap-4">
-                    {formData.image
-                      ? <div className="h-16 w-16 shrink-0 rounded-md overflow-hidden bg-muted border"><img src={formData.image} alt="Preview" className="h-full w-full object-cover" /></div>
-                      : <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-md border border-dashed bg-muted"><CloudUpload className="h-6 w-6 text-muted-foreground" /></div>
-                    }
-                    <input type="text" placeholder="https://..." value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+                    <div 
+                      onClick={() => !convertingImage && fileInputRef.current?.click()}
+                      className="h-16 w-16 shrink-0 rounded-md overflow-hidden bg-muted border border-dashed flex items-center justify-center cursor-pointer hover:bg-muted/60 transition-colors"
+                    >
+                      {convertingImage ? (
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
+                      ) : formData.image ? (
+                        <img src={formData.image} alt="Preview" className="h-full w-full object-cover" />
+                      ) : (
+                        <CloudUpload className="h-6 w-6 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <input 
+                        type="text" 
+                        placeholder="Pegar URL de imagen o..." 
+                        value={formData.image} 
+                        onChange={e => setFormData({...formData, image: e.target.value})}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" 
+                      />
+                      <p className="text-[10px] text-muted-foreground leading-tight">Haz clic en el recuadro de la izquierda para subir desde tu dispositivo.</p>
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileChange}
+                      disabled={convertingImage}
+                    />
                   </div>
                 </div>
               </form>

@@ -16,6 +16,16 @@ export type DbOrder = {
   tracking_code: string | null;
   status: 'pendiente' | 'confirmado' | 'preparacion' | 'camino' | 'entregado' | 'cancelado';
   created_at: string;
+  
+  // Nuevos campos Bocafest
+  district?: string | null;
+  delivery_date?: string | null;
+  receiver_phone?: string | null;
+  for_name?: string | null;
+  from_name?: string | null;
+  dedication?: string | null;
+  reference?: string | null;
+  delivery_fee?: number;
 };
 
 const STATUS_MAP: Record<string, string> = {
@@ -50,6 +60,14 @@ export async function updateOrderStatus(id: string, status: 'pendiente' | 'confi
   if (error) throw error;
 }
 
+export async function updateOrderDeliveryFee(id: string, delivery_fee: number) {
+  const { error } = await supabase
+    .from('reservations')
+    .update({ delivery_fee })
+    .eq('id', id);
+  if (error) throw error;
+}
+
 export async function createOrder(payload: {
   name: string;
   phone: string;
@@ -62,6 +80,15 @@ export async function createOrder(payload: {
   payment_method: string;
   receipt_url?: string;
   tracking_code: string;
+  
+  // Nuevos campos Bocafest
+  district?: string;
+  delivery_date?: string;
+  receiver_phone?: string;
+  for_name?: string;
+  from_name?: string;
+  dedication?: string;
+  reference?: string;
 }) {
   const tenantId = await getBocafestTenantId();
   const { data, error } = await supabase
@@ -80,6 +107,16 @@ export async function createOrder(payload: {
       receipt_url: payload.receipt_url,
       tracking_code: payload.tracking_code,
       status: 'pendiente',
+      
+      // Nuevos campos
+      district: payload.district,
+      delivery_date: payload.delivery_date,
+      receiver_phone: payload.receiver_phone,
+      for_name: payload.for_name,
+      from_name: payload.from_name,
+      dedication: payload.dedication,
+      reference: payload.reference,
+      delivery_fee: 0,
     })
     .select()
     .single();

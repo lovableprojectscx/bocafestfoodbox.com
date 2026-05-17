@@ -13,6 +13,7 @@ type SettingsCtx = {
   yape_qr_url?: string | null;
   yape_number?: string | null;
   yape_holder_name?: string | null;
+  bcp_account?: string | null;
   plin_enabled?: boolean | null;
   loading: boolean;
 };
@@ -46,6 +47,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         yape_qr_url: settings.yape_qr_url,
         yape_number: settings.yape_number,
         yape_holder_name: settings.yape_holder_name,
+        bcp_account: settings.bcp_account,
         plin_enabled: settings.plin_enabled,
         loading 
       }}

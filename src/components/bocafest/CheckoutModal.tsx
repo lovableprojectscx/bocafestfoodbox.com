@@ -1,149 +1,124 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, MessageCircle, FileText, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useCart, buildWhatsAppOrderUrl, formatPEN } from "@/lib/cart";
 import { createOrder } from "@/lib/api/orders";
 import { useSettings } from "@/lib/settings-context";
-import { supabase, getBocafestTenantId } from "@/lib/supabase";
 
-import whatsappIcon from "@/assets/bocafest/whatsapp.svg";
-import yapeIcon from "@/assets/bocafest/yape.png";
-import plinIcon from "@/assets/bocafest/plin.png";
-
-type Method = "WhatsApp" | "Yape" | "Plin";
-
-const PAYMENT_METHODS = [
-  { id: "WhatsApp" as Method, title: "WhatsApp", desc: "Coordina al chat", logoUrl: whatsappIcon, colorHover: "hover:border-[#25D366] hover:bg-[#25D366]/5" },
-  { id: "Yape" as Method, title: "Yape", desc: "Paga con QR", logoUrl: yapeIcon, colorHover: "hover:border-[#742284] hover:bg-[#742284]/5" },
-  { id: "Plin" as Method, title: "Plin", desc: "Paga con QR", logoUrl: plinIcon, colorHover: "hover:border-[#00D2D3] hover:bg-[#00D2D3]/5" },
-];
+type CheckoutStep = 1 | 2 | 3;
 
 export function CheckoutModal({ onClose }: { onClose: () => void }) {
   const { items, total, clear } = useCart();
   const navigate = useNavigate();
-  const { whatsapp, waUrl, yape_qr_url, yape_number, yape_holder_name, plin_enabled } = useSettings();
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
-  const [method, setMethod] = useState<Method | null>(null);
+  const { whatsapp } = useSettings();
+  const [step, setStep] = useState<CheckoutStep>(1);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   
-  const [deliveryData, setDeliveryData] = useState({
-    name: "", phone: "", address: "", hour: "10", minute: "00", ampm: "AM", message: "",
+  const [formData, setFormData] = useState({
+    district: "",
+    name: "",
+    phone: "",
+    delivery_date: "",
+    time_slot: "",
+    address: "",
+    reference: "",
+    receiver_phone: "",
+    for_name: "",
+    from_name: "",
+    dedication: "",
   });
 
-  const [receiptImage, setReceiptImage] = useState<string | null>(null);
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [trackingCode, setTrackingCode] = useState<string>("");
 
-  const qrUrl = yape_qr_url || `https://api.qrserver.com/v1/create-qr-code/?data=${yape_number || whatsapp}&size=240x240&bgcolor=F8F2E6`;
-
-  const availableMethods = plin_enabled === false ? PAYMENT_METHODS.filter(m => m.id === "WhatsApp") : PAYMENT_METHODS;
-
-  const sendWhatsApp = (m: Method, skipDeliveryData = false) => {
-    window.open(buildWhatsAppOrderUrl(items, total, m, skipDeliveryData ? undefined : deliveryData, whatsapp), "_blank", "noopener");
+  const sendWhatsAppDirect = () => {
+    // Si elige directo por WhatsApp, armamos el mensaje solo con los productos
+    window.open(buildWhatsAppOrderUrl(items, total, "WhatsApp", undefined, whatsapp), "_blank", "noopener");
+    onClose();
   };
 
-  const handleSelectMethod = (m: Method) => {
-    if (m === "WhatsApp") {
-      sendWhatsApp(m, true);
-    } else {
-      setMethod(m);
-      setStep(2);
-    }
-  };
-
-  const handleNextStep = (e: React.FormEvent) => { e.preventDefault(); setStep(3); };
-
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-
-      // Security check: Validate file type
-      if (!file.type.startsWith('image/')) {
-        alert('Por favor, sube un archivo de imagen válido (PNG, JPG, WEBP).');
-        return;
-      }
-
-      // Validar tamaño (máx 5MB, coherente con admin)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('El comprobante es muy grande (máximo 5MB). Por favor sube una imagen más liviana.');
-        return;
-      }
-
-      setReceiptFile(file);
-      // Show preview locally
-      const previewUrl = URL.createObjectURL(file);
-      setReceiptImage(previewUrl);
-    }
-  };
-
-  // Sube el comprobante a Supabase Storage y devuelve la URL pública
-  const uploadReceiptToStorage = async (file: File): Promise<string> => {
-    const tenantId = await getBocafestTenantId();
-    const ext = file.name.split('.').pop() || 'jpg';
-    // Nombre único usando timestamp + random para evitar colisiones
-    const path = `${tenantId}/receipts/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-
-    const { error: upError } = await supabase.storage
-      .from('bocafest-assets')
-      .upload(path, file, { upsert: false, contentType: file.type });
-
-    if (upError) throw new Error(`Error al subir comprobante: ${upError.message}`);
-
-    const { data: urlData } = supabase.storage
-      .from('bocafest-assets')
-      .getPublicUrl(path);
-
-    return urlData.publicUrl;
-  };
-
-  // Genera código de seguimiento con mayor entropía: BF-XXXXXX (base36 timestamp + random)
   const generateTrackingCode = (): string => {
     const ts = Date.now().toString(36).toUpperCase().slice(-4);
     const rnd = Math.random().toString(36).toUpperCase().slice(2, 4);
-    return `BF-${ts}${rnd}`;
+    return `BOC-${ts}${rnd}`;
   };
 
-  const handleFinalizeOrder = async () => {
+  const calculateOneHourLater = (timeStr: string): string => {
+    if (!timeStr) return "";
+    
+    // Soporta formatos como "8:30 am", "08:30 AM", "15:30", "8:30"
+    const regex = /(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)?/i;
+    const match = timeStr.match(regex);
+    if (!match) {
+      // Si escriben texto libre que no es hora, se guarda con margen por defecto
+      return `${timeStr} (Rango 1h)`;
+    }
+    
+    const hours = parseInt(match[1]);
+    const minutes = match[2];
+    const ampm = match[3] ? match[3].toUpperCase() : '';
+    
+    // Sumamos 1 hora
+    let nextHours = hours + 1;
+    let nextAmpm = ampm;
+    
+    if (ampm === 'AM' && nextHours === 12) {
+      nextAmpm = 'PM';
+    } else if (ampm === 'PM' && nextHours === 12) {
+      nextAmpm = 'AM';
+    } else if (nextHours > 12 && ampm) {
+      nextHours = nextHours - 12;
+    } else if (nextHours >= 24) {
+      nextHours = nextHours - 24;
+    }
+    
+    const paddedNextHours = nextHours.toString().padStart(2, '0');
+    
+    if (ampm) {
+      return `${timeStr.toUpperCase()} A ${paddedNextHours}:${minutes} ${nextAmpm}`;
+    } else {
+      const paddedHours = hours.toString().padStart(2, '0');
+      return `${paddedHours}:${minutes} A ${paddedNextHours}:${minutes}`;
+    }
+  };
+
+  const handleFinalizeFormOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (saving) return;
     setSaving(true);
     setSaveError(null);
 
     const code = generateTrackingCode();
-    const today = new Date().toISOString().split('T')[0];
-    const timeSlot = `${deliveryData.hour}:${deliveryData.minute} ${deliveryData.ampm}`;
+    const computedTimeSlot = calculateOneHourLater(formData.time_slot.trim());
 
     try {
-      // Subir comprobante a Storage (no base64 en DB)
-      let receiptUrl: string | undefined = undefined;
-      if (receiptFile) {
-        receiptUrl = await uploadReceiptToStorage(receiptFile);
-      }
-
-      // Sanitizar inputs antes de enviar a Supabase
-      const cleanName = (deliveryData.name || 'Cliente').trim().slice(0, 100);
-      const cleanPhone = (deliveryData.phone || '').trim().slice(0, 20);
-      const cleanAddress = (deliveryData.address || '').trim().slice(0, 255);
-      const cleanMessage = deliveryData.message ? deliveryData.message.trim().slice(0, 500) : undefined;
-
       await createOrder({
-        name: cleanName,
-        phone: cleanPhone,
-        address: cleanAddress,
-        date: today,
-        time_slot: timeSlot,
-        message: cleanMessage,
+        // Datos básicos del cliente que compra
+        name: formData.name.trim(),
+        phone: formData.phone.trim(),
+        address: formData.address.trim(),
+        
+        // El date "técnico" del pedido (se guarda como hoy para reporting)
+        date: new Date().toISOString().split('T')[0],
+        time_slot: computedTimeSlot,
+        
+        // Nuevos campos
+        district: formData.district.trim(),
+        delivery_date: formData.delivery_date,
+        reference: formData.reference.trim(),
+        receiver_phone: formData.receiver_phone.trim(),
+        for_name: formData.for_name.trim(),
+        from_name: formData.from_name.trim(),
+        dedication: formData.dedication.trim(),
+        
         items: items.map(i => ({ id: i.id, name: i.name, qty: i.qty, price: i.price })),
         total: Math.max(0, total),
-        payment_method: method || 'WhatsApp',
-        receipt_url: receiptUrl,
+        payment_method: "WhatsApp", // Todo se coordina por WA ahora
         tracking_code: code,
       });
 
-      // Solo avanzar si el pedido se guardó correctamente
       setTrackingCode(code);
-      setStep(4);
+      setStep(3); // Pantalla de éxito
       clear();
     } catch (e) {
       console.error('Error al guardar pedido:', e);
@@ -155,8 +130,8 @@ export function CheckoutModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-[60] grid place-items-center overflow-y-auto bg-primary/50 p-4 py-8 backdrop-blur-sm">
-      <div className="bf-spring relative w-full max-w-lg overflow-hidden rounded-[2rem] bg-background shadow-2xl">
-        {step !== 4 && (
+      <div className="bf-spring relative w-full max-w-xl overflow-hidden rounded-[2rem] bg-background shadow-2xl">
+        {step !== 3 && (
           <button
             onClick={onClose}
             aria-label="Cerrar"
@@ -169,216 +144,255 @@ export function CheckoutModal({ onClose }: { onClose: () => void }) {
         <div className="px-5 pb-6 pt-8 sm:px-8 sm:pb-8 sm:pt-10">
           {step === 1 && (
             <>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-accent">Paso 1 de 3</p>
-              <h3 className="mt-2 font-display text-3xl text-primary md:text-4xl">¿Cómo prefieres pagar?</h3>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-accent">Paso 1 de 2</p>
+              <h3 className="mt-2 font-display text-3xl text-primary md:text-4xl">¿Cómo deseas pedir?</h3>
               <p className="mt-2 font-serif text-lg text-muted-foreground">
-                Total a pagar: <span className="font-bold text-accent">{formatPEN(total)}</span>
+                Total de tus productos: <span className="font-bold text-accent">{formatPEN(total)}</span>
               </p>
 
-              <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                {availableMethods.map((m) => (
-                  <button
-                    key={m.id}
-                    onClick={() => handleSelectMethod(m.id)}
-                    className={`group relative flex flex-col items-center overflow-hidden rounded-2xl border-2 border-primary/10 bg-card p-5 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${m.colorHover}`}
-                  >
-                    <div className="mb-3 flex h-14 w-full items-center justify-center">
-                      <img src={m.logoUrl} alt={`Logo de ${m.title}`} className="h-full w-auto max-w-[80px] object-contain drop-shadow-sm transition-transform duration-300 group-hover:scale-110" />
-                    </div>
-                    <p className="font-display text-xl font-bold text-primary">{m.title}</p>
-                    <p className="mt-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground transition-colors group-hover:text-primary/70">
-                      {m.desc}
-                    </p>
-                  </button>
-                ))}
+              <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <button
+                  onClick={sendWhatsAppDirect}
+                  className="group relative flex flex-col items-center overflow-hidden rounded-2xl border-2 border-primary/10 bg-card p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-[#25D366] hover:bg-[#25D366]/5"
+                >
+                  <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366]/10 text-[#25D366] transition-transform duration-300 group-hover:scale-110 group-hover:bg-[#25D366] group-hover:text-white">
+                    <MessageCircle className="h-7 w-7" />
+                  </div>
+                  <p className="font-display text-xl font-bold text-primary">Chat Rápido</p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Envía tu lista de productos directo a WhatsApp y coordinamos todo por ahí.
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => setStep(2)}
+                  className="group relative flex flex-col items-center overflow-hidden rounded-2xl border-2 border-primary/10 bg-card p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-accent hover:bg-accent/5"
+                >
+                  <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-accent/10 text-accent transition-transform duration-300 group-hover:scale-110 group-hover:bg-accent group-hover:text-white">
+                    <FileText className="h-7 w-7" />
+                  </div>
+                  <p className="font-display text-xl font-bold text-primary">Formulario</p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Llena todos los datos de envío, dedicatoria y fechas para agilizar tu pedido.
+                  </p>
+                </button>
               </div>
             </>
           )}
 
           {step === 2 && (
             <>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-accent">Paso 2 de 3</p>
-              <h3 className="mt-2 font-display text-3xl text-primary md:text-4xl">Datos de entrega</h3>
-              <p className="mt-2 font-serif text-lg text-muted-foreground">
-                Total a pagar: <span className="font-bold text-accent">{formatPEN(total)}</span>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-accent">Paso 2 de 2</p>
+              <h3 className="mt-2 font-display text-3xl text-primary md:text-4xl">Datos del Pedido</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                El costo de delivery será calculado y enviado por WhatsApp tras recibir tu solicitud.
               </p>
 
-              <form onSubmit={handleNextStep} className="mt-8 flex flex-col gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-primary">Nombre del cliente</label>
-                  <input
-                    required
-                    type="text"
-                    placeholder="Ej. María López"
-                    value={deliveryData.name}
-                    onChange={(e) => setDeliveryData({ ...deliveryData, name: e.target.value })}
-                    className="w-full rounded-2xl border border-primary/20 bg-card px-4 py-3 text-sm text-primary transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-primary">Teléfono</label>
-                  <input
-                    required
-                    type="tel"
-                    placeholder="Ej. 987654321"
-                    value={deliveryData.phone}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '').slice(0, 9);
-                      setDeliveryData({ ...deliveryData, phone: value });
-                    }}
-                    minLength={9}
-                    maxLength={9}
-                    className="w-full rounded-2xl border border-primary/20 bg-card px-4 py-3 text-sm text-primary transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-primary">Dirección de delivery</label>
-                  <input
-                    required
-                    type="text"
-                    placeholder="Ej. Av. Los Pinos 123"
-                    value={deliveryData.address}
-                    onChange={(e) => setDeliveryData({ ...deliveryData, address: e.target.value })}
-                    className="w-full rounded-2xl border border-primary/20 bg-card px-4 py-3 text-sm text-primary transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-primary">Hora de entrega preferida</label>
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={deliveryData.hour}
-                      onChange={(e) => setDeliveryData({ ...deliveryData, hour: e.target.value })}
-                      className="w-full appearance-none rounded-2xl border border-primary/20 bg-card px-4 py-3 text-sm text-primary text-center transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-                    >
-                      {Array.from({ length: 12 }).map((_, i) => (
-                        <option key={i + 1} value={String(i + 1)}>{i + 1}</option>
-                      ))}
-                    </select>
-                    
-                    <span className="font-bold text-primary">:</span>
-                    
-                    <select
-                      value={deliveryData.minute}
-                      onChange={(e) => setDeliveryData({ ...deliveryData, minute: e.target.value })}
-                      className="w-full appearance-none rounded-2xl border border-primary/20 bg-card px-4 py-3 text-sm text-primary text-center transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-                    >
-                      <option value="00">00</option>
-                      <option value="30">30</option>
-                    </select>
+              <form onSubmit={handleFinalizeFormOrder} className="mt-6 flex flex-col gap-5 max-h-[60vh] overflow-y-auto pr-2 pb-4 bf-scrollbar">
+                
+                {/* 1. Datos de Entrega */}
+                <div className="space-y-4 rounded-xl border border-primary/10 bg-primary/5 p-4">
+                  <h4 className="font-serif text-lg font-bold text-primary">Lugar y Fecha</h4>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-primary">Distrito *</label>
+                      <input
+                        required type="text" placeholder="Ej. San Juan Bautista"
+                        name="district" autocomplete="address-level2"
+                        value={formData.district} onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                        className="w-full rounded-xl border border-primary/20 bg-background px-4 py-2.5 text-sm text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-semibold uppercase tracking-wider text-primary">Fecha de entrega *</label>
+                        <div className="flex gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const today = new Date().toISOString().split('T')[0];
+                              setFormData({ ...formData, delivery_date: today });
+                            }}
+                            className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold border transition-all ${
+                              formData.delivery_date === new Date().toISOString().split('T')[0]
+                                ? 'bg-accent border-accent text-white shadow-sm'
+                                : 'bg-background border-primary/20 text-primary hover:bg-primary/5'
+                            }`}
+                          >
+                            Hoy
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const tomorrow = new Date();
+                              tomorrow.setDate(tomorrow.getDate() + 1);
+                              const tomorrowStr = tomorrow.toISOString().split('T')[0];
+                              setFormData({ ...formData, delivery_date: tomorrowStr });
+                            }}
+                            className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold border transition-all ${
+                              formData.delivery_date === (() => {
+                                const tomorrow = new Date();
+                                tomorrow.setDate(tomorrow.getDate() + 1);
+                                return tomorrow.toISOString().split('T')[0];
+                              })()
+                                ? 'bg-accent border-accent text-white shadow-sm'
+                                : 'bg-background border-primary/20 text-primary hover:bg-primary/5'
+                            }`}
+                          >
+                            Mañana
+                          </button>
+                        </div>
+                      </div>
+                      <input
+                        required type="date"
+                        min={new Date().toISOString().split('T')[0]}
+                        value={formData.delivery_date} onChange={(e) => setFormData({ ...formData, delivery_date: e.target.value })}
+                        className="w-full rounded-xl border border-primary/20 bg-background px-4 py-2.5 text-sm text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                      />
+                    </div>
+                  </div>
 
-                    <select
-                      value={deliveryData.ampm}
-                      onChange={(e) => setDeliveryData({ ...deliveryData, ampm: e.target.value })}
-                      className="w-full appearance-none rounded-2xl border border-primary/20 bg-card px-4 py-3 text-sm text-primary text-center transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-                    >
-                      <option value="AM">AM</option>
-                      <option value="PM">PM</option>
-                    </select>
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-primary">¿A qué hora deseas que llegue? *</label>
+                    <input
+                      required
+                      type="text"
+                      placeholder="Ej. 08:30 AM o 09:00 AM"
+                      value={formData.time_slot}
+                      onChange={(e) => setFormData({ ...formData, time_slot: e.target.value })}
+                      className="w-full rounded-xl border border-primary/20 bg-background px-4 py-2.5 text-sm text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                    />
+                    <p className="text-[11px] leading-relaxed text-accent/80 mt-1.5 font-medium bg-accent/5 p-2 rounded-lg border border-accent/10">
+                      💡 <strong>Nota de Tolerancia:</strong> Tu box llegará en un rango de hasta 1 hora máximo a partir de tu hora indicada (Ej. si pides 8:30 AM, el rango agendado será de 8:30 AM a 9:30 AM).
+                    </p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-primary">Dirección Exacta *</label>
+                    <input
+                      required type="text" placeholder="Ej. Av. Los Pinos 123"
+                      name="address" autocomplete="street-address"
+                      value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      className="w-full rounded-xl border border-primary/20 bg-background px-4 py-2.5 text-sm text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                    />
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-primary">Referencia (Opcional)</label>
+                    <input
+                      type="text" placeholder="Ej. Casa verde frente al parque"
+                      value={formData.reference} onChange={(e) => setFormData({ ...formData, reference: e.target.value })}
+                      className="w-full rounded-xl border border-primary/20 bg-background px-4 py-2.5 text-sm text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                    />
                   </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-primary">Mensaje extra (opcional)</label>
-                  <textarea
-                    rows={2}
-                    placeholder="Ej. Feliz cumpleaños..."
-                    value={deliveryData.message}
-                    onChange={(e) => setDeliveryData({ ...deliveryData, message: e.target.value })}
-                    className="w-full resize-none rounded-2xl border border-primary/20 bg-card px-4 py-3 text-sm text-primary transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-                  />
+
+                {/* 2. Datos del Sorprendido */}
+                <div className="space-y-4 rounded-xl border border-primary/10 bg-primary/5 p-4">
+                  <h4 className="font-serif text-lg font-bold text-primary">Detalle de la Sorpresa</h4>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-primary">Para (Nombre) *</label>
+                      <input
+                        required type="text" placeholder="A quién va dirigido"
+                        value={formData.for_name} onChange={(e) => setFormData({ ...formData, for_name: e.target.value })}
+                        className="w-full rounded-xl border border-primary/20 bg-background px-4 py-2.5 text-sm text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-primary">De (Tu Nombre) *</label>
+                      <input
+                        required type="text" placeholder="Quién envía"
+                        value={formData.from_name} onChange={(e) => setFormData({ ...formData, from_name: e.target.value })}
+                        className="w-full rounded-xl border border-primary/20 bg-background px-4 py-2.5 text-sm text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-primary">Teléfono de quien recibe *</label>
+                    <input
+                      required type="tel" minLength={9} maxLength={12} placeholder="Celular de la persona sorprendida"
+                      value={formData.receiver_phone} onChange={(e) => setFormData({ ...formData, receiver_phone: e.target.value.replace(/\D/g, '') })}
+                      className="w-full rounded-xl border border-primary/20 bg-background px-4 py-2.5 text-sm text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-primary">Dedicatoria (Máx 50 palabras) *</label>
+                    <textarea
+                      required rows={3} placeholder="Escribe tu mensaje especial aquí..."
+                      value={formData.dedication} onChange={(e) => setFormData({ ...formData, dedication: e.target.value })}
+                      className="w-full resize-none rounded-xl border border-primary/20 bg-background px-4 py-2.5 text-sm text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                    />
+                  </div>
+                </div>
+
+                {/* 3. Datos de Contacto (Comprador) */}
+                <div className="space-y-4 rounded-xl border border-primary/10 bg-primary/5 p-4">
+                  <h4 className="font-serif text-lg font-bold text-primary">Tus Datos de Contacto</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-primary">Tu Nombre *</label>
+                      <input
+                        required type="text" placeholder="Nombre de quien compra"
+                        name="name" autocomplete="name"
+                        value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        className="w-full rounded-xl border border-primary/20 bg-background px-4 py-2.5 text-sm text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-primary">Tu Celular *</label>
+                      <input
+                        required type="tel" minLength={9} maxLength={12} placeholder="Celular (para coordinar el pago)"
+                        name="tel" autocomplete="tel"
+                        value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '') })}
+                        className="w-full rounded-xl border border-primary/20 bg-background px-4 py-2.5 text-sm text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                      />
+                    </div>
+                  </div>
                 </div>
                 
-                <button
-                  type="submit"
-                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-primary py-4 text-base font-semibold text-primary-foreground shadow-lg transition-transform hover:scale-[1.02]"
-                >
-                  Continuar al pago
-                </button>
-              </form>
+                {saveError && (
+                  <div className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive text-center">
+                    {saveError}
+                  </div>
+                )}
 
-              <button
-                onClick={() => { setStep(1); setMethod(null); }}
-                className="mt-6 block w-full text-sm font-medium text-muted-foreground transition-colors hover:text-accent"
-              >
-                ← Volver a métodos de pago
-              </button>
+                <div className="sticky bottom-0 bg-background pt-2 pb-1">
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-4 text-base font-semibold text-primary-foreground shadow-lg transition-transform hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
+                  >
+                    {saving ? 'Enviando...' : 'Enviar Pedido'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="mt-3 block w-full text-sm font-medium text-muted-foreground transition-colors hover:text-accent"
+                  >
+                    ← Volver atrás
+                  </button>
+                </div>
+              </form>
             </>
           )}
 
-          {step === 3 && method && (
-            <div className="bf-reveal is-visible mt-2 overflow-hidden rounded-3xl border-2 border-primary/5 bg-card p-8 text-center shadow-inner">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-accent mb-4">Paso 3 de 3</p>
-              <p className="font-display text-2xl text-primary">Escanea con <span className="font-bold">{method}</span></p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Abre tu app, escanea el QR o transfiere al número <strong className="text-primary">{yape_number || whatsapp.replace(/^51/, '')}</strong>. 
-                Luego sube la captura aquí abajo.
-              </p>
-              
-              <div className="mx-auto my-6 flex flex-col items-center">
-                <div className="aspect-square w-48 overflow-hidden rounded-2xl bg-white p-3 shadow-lg ring-1 ring-primary/10">
-                  <img src={qrUrl} alt={`QR ${method}`} className="h-full w-full object-cover" />
-                </div>
-                {yape_holder_name && (
-                  <div className="mt-4 rounded-full bg-primary/5 px-4 py-1.5 text-xs font-semibold text-primary">
-                    Titular: {yape_holder_name}
-                  </div>
-                )}
-              </div>
-              
-              <div className="mt-8">
-                <label className="relative flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-primary/20 bg-muted/50 p-6 text-center transition-colors hover:border-accent hover:bg-accent/5">
-                  {receiptImage ? (
-                    <div className="relative h-24 w-auto overflow-hidden rounded-xl border border-primary/10">
-                      <img src={receiptImage} alt="Comprobante" className="h-full w-full object-cover" />
-                      <div className="absolute inset-0 grid place-items-center bg-black/40 opacity-0 transition-opacity hover:opacity-100">
-                        <span className="text-xs font-bold text-white">Cambiar</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="mb-2 rounded-full bg-primary/10 p-3 text-primary">
-                        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                      </div>
-                      <p className="text-sm font-semibold text-primary">Subir comprobante</p>
-                      <p className="mt-1 text-xs text-muted-foreground">PNG, JPG (Max. 5MB)</p>
-                    </>
-                  )}
-                  <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
-                </label>
-              </div>
-
-              {saveError && (
-                <div className="mt-4 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive text-center">
-                  {saveError}
-                </div>
-              )}
-
-              <button
-                disabled={!receiptImage || saving}
-                onClick={handleFinalizeOrder}
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-primary py-4 text-base font-bold text-primary-foreground shadow-lg transition-transform hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:hover:scale-100"
-              >
-                {saving ? 'Guardando pedido...' : 'Finalizar pedido'}
-              </button>
-              
-              <button
-                onClick={() => setStep(2)}
-                className="mt-4 block w-full text-sm font-medium text-muted-foreground transition-colors hover:text-accent"
-              >
-                ← Volver a datos de entrega
-              </button>
-            </div>
-          )}
-
-          {step === 4 && (
+          {step === 3 && (
             <div className="bf-reveal is-visible text-center py-6">
               <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-green-600">
-                <svg className="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                <CheckCircle2 className="h-10 w-10" />
               </div>
-              <h3 className="font-display text-3xl text-primary">¡Pedido Confirmado!</h3>
-              <p className="mt-3 text-muted-foreground">Tu pago y datos han sido registrados exitosamente. Te estaremos notificando sobre tu envío.</p>
+              <h3 className="font-display text-3xl text-primary">¡Pedido Recibido!</h3>
+              <p className="mt-3 text-muted-foreground">
+                Hemos recibido tu solicitud correctamente. En breve nos pondremos en contacto contigo vía WhatsApp para confirmarte el costo del delivery y los datos de pago.
+              </p>
               
               <div className="my-8 rounded-2xl bg-muted/50 p-6 border border-primary/10">
-                <p className="text-xs font-semibold uppercase tracking-widest text-primary/60">Código de seguimiento</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-primary/60">Código de tu solicitud</p>
                 <p className="mt-1 font-serif text-4xl font-bold tracking-widest text-accent">{trackingCode}</p>
               </div>
 

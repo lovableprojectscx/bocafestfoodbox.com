@@ -6,6 +6,8 @@ export type DbSettings = {
   store_name: string | null;
   yape_number: string | null;
   yape_qr_url: string | null;
+  yape_holder_name: string | null;
+  bcp_account: string | null;
   schedule: string | null;
   zones: string | null;
   plin_enabled: boolean | null;
