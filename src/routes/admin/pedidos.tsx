@@ -164,7 +164,7 @@ function PedidosPage() {
       </div>
 
       {/* Pestañas de Filtrado */}
-      <div className="flex border-b border-muted">
+      <div className="flex border-b border-muted overflow-x-auto whitespace-nowrap scrollbar-none">
         <button
           onClick={() => setActiveTab('activos')}
           className={`px-4 py-2.5 font-semibold text-sm border-b-2 transition-all ${
@@ -206,7 +206,8 @@ function PedidosPage() {
       </div>
 
       <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Vista de Tabla para Escritorio (Oculta en móviles) */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="bg-muted/50 text-muted-foreground">
               <tr>
@@ -261,6 +262,58 @@ function PedidosPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Vista de Tarjetas para Celulares (Visible solo en móviles) */}
+        <div className="block sm:hidden divide-y">
+          {filtered.map((order) => {
+            const ui = STATUS_UI[order.status] || STATUS_UI['pendiente'];
+            return (
+              <div key={order.id} className="p-4 space-y-3 hover:bg-muted/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-sm font-bold text-primary">{order.tracking_code || '—'}</span>
+                  <span className="text-xs text-muted-foreground">{formatDate(order.created_at)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="font-semibold text-sm text-foreground">{order.name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Total: <span className="font-medium text-accent">S/ {Number(order.total).toFixed(2)}</span> | Delivery: S/ {Number(order.delivery_fee || 0).toFixed(2)}
+                    </p>
+                  </div>
+                  <div>
+                    <select
+                      value={order.status}
+                      onChange={(e) => handleDirectStatusChange(order.id, e.target.value as DbOrder['status'])}
+                      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-bold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer ${ui.color}`}
+                    >
+                      {STATUS_OPTIONS.map(s => (
+                        <option key={s} value={s} className="bg-background text-foreground font-normal">
+                          {STATUS_UI[s]?.label || s}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 pt-2 border-t border-dashed">
+                  <button onClick={() => handleOpenModal(order)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border bg-background text-muted-foreground hover:bg-muted transition-colors" title="Ver Detalles">
+                    <Eye className="h-3.5 w-3.5" />
+                    Detalles
+                  </button>
+                  <button onClick={() => handleDeleteOrder(order.id)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border bg-background text-destructive hover:bg-destructive/10 transition-colors" title="Eliminar Pedido">
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+          {filtered.length === 0 && (
+            <div className="p-8 text-center text-muted-foreground text-sm">
+              {orders.length === 0 ? 'Aún no hay pedidos registrados.' : 'No se encontraron pedidos.'}
+            </div>
+          )}
+        </div>
+
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t px-6 py-3 text-sm text-muted-foreground">
           <div>Mostrando {filtered.length} de {orders.length} pedidos</div>
         </div>
