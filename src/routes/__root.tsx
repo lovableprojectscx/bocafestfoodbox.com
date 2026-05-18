@@ -161,16 +161,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         type: "application/ld+json",
         children: JSON.stringify(seoJsonLd),
-      },
-      {
-        // Tracker de Idenza — cargado con defer para no bloquear el render
-        // El onerror evita que un fallo de red genere un error visible en consola
-        src: "https://idenza.site/tracker.js",
-        "data-token": "ec8172d6cca43e515ece4167fc19a600bedc19385442a99c",
-        "data-org": "34194fe4-e82a-4fa1-b1b9-93790ae791ab",
-        defer: true,
-        onerror: "void 0",
-      },
+      }
     ],
   }),
   shellComponent: RootShell,
