@@ -175,6 +175,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
     <html lang="es">
       <head>
         <HeadContent />
+        <script
+          src="https://idenza.site/tracker.js"
+          data-token="6eb26abc2ae1444da67b2838704d1d74"
+          data-org="1298d59f-4192-4795-95b3-2478d1394197"
+        />
       </head>
       <body>
         {children}

@@ -123,16 +123,18 @@ export async function createOrder(payload: {
   if (error) throw error;
   return data as DbOrder;
 }
-
 export async function fetchOrderByTrackingCode(code: string): Promise<DbOrder | null> {
   const tenantId = await getBocafestTenantId();
   const { data, error } = await supabase
-    .from('reservations')
-    .select('*')
-    .eq('tenant_id', tenantId)
-    .eq('tracking_code', code.toUpperCase())
-    .single();
-  if (error) return null;
+    .rpc('get_reservation_by_tracking_code', {
+      p_tracking_code: code.toUpperCase(),
+      p_tenant_id: tenantId
+    })
+    .maybeSingle();
+  if (error) {
+    console.error('Error fetching order by tracking code:', error);
+    return null;
+  }
   return data as DbOrder;
 }
 
